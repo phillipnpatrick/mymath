@@ -1,8 +1,31 @@
 package basicmath
 
-import "math"
+import (
+	"math"
+	"mymath/interfaces"
+)
 
 // #region Public Methods
+
+// AddTwo adds two Addable types
+func AddTwo[T interfaces.Addable[T]](a, b T) T {
+	return a.Add(b)
+}
+
+// DivideTwo adds two Dividable types
+func DivideTwo[T interfaces.Dividable[T]](a, b T) T {
+	return a.Divide(b)
+}
+
+// MultiplyTwo adds two Multipliable types
+func MultiplyTwo[T interfaces.Multipliable[T]](a, b T) T {
+	return a.Multiply(b)
+}
+
+// SubtractTwo adds two Subtractable types
+func SubtractTwo[T interfaces.Subtractable[T]](a, b T) T {
+	return a.Subtract(b)
+}
 
 func GCF(numbers ...int) int {
 	if len(numbers) == 0 {

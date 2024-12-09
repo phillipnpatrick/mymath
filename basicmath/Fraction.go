@@ -67,6 +67,31 @@ func (f *Fraction) Denominator() int {
 
 // #endregion
 
+// #region Comparable
+
+func (f *Fraction) Equals(other *Fraction) bool {
+	// Cross-multiply to compare without floating-point operations
+	return f.n*other.d == other.n*f.d
+}
+
+func (f *Fraction) GreaterThan(other *Fraction) bool {
+	return f.n*other.d > other.n*f.d
+}
+
+func (f *Fraction) GreaterThanOrEqualTo(other *Fraction) bool {
+	return f.n*other.d >= other.n*f.d
+}
+
+func (f *Fraction) LessThan(other *Fraction) bool {
+	return f.n*other.d < other.n*f.d
+}
+
+func (f *Fraction) LessThanOrEqualTo(other *Fraction) bool {
+	return f.n*other.d <= other.n*f.d
+}
+
+// #endregion
+
 // #region Factorable
 
 func (f *Fraction) Factor() string {
@@ -115,84 +140,65 @@ func (f *Fraction) LaTeX() string {
 // #endregion
 
 // #region Operable
-func (f *Fraction) Add(T ...any) any {
-	if f == nil {
-		return nil // Return a default value or error to prevent nil dereference
-	}
-	for _, value := range T {
-		if f2, ok := value.(*Fraction); ok {
-			var temp *Fraction
 
-			f.Simplify()
-			f2.Simplify()
+func (f *Fraction) Add(others ...*Fraction) *Fraction {
+	f.Simplify()
+	temp := NewFraction(WithNumerator(f.n), WithDenominator(f.d))
 
-			if f.d == f2.d {
-				temp = &Fraction{
-					n: f.n + f2.n,
-					d: f.d,
-				}
-			} else {
-				lcm := LCM(f.d, f2.d)
-				left := &Fraction{n: lcm/f.d, d: lcm/f.d}
-				right := &Fraction{n: lcm/f2.d}
-				
-				temp = &Fraction{
-					n: f.n*left.n + f2.n*right.n,
-					d: f.d*left.d,
-				}
-			}
+	for _, other := range others {
+		other.Simplify()
 
-			temp.Simplify()
+		if temp.d == other.d {
+			temp.n = temp.n + other.n
+			temp.d= other.d
+		} else {
+			lcm := LCM(temp.d, other.d)
+			left := &Fraction{n: lcm/temp.d, d: lcm/temp.d}
+			right := &Fraction{n: lcm/other.d, d: lcm/other.d}
 			
-			return temp
+			temp.n = temp.n*left.n + other.n*right.n
+			temp.d = temp.d*left.d
 		}
+
+		temp.Simplify()
 	}
-	return nil
+
+	return temp
 }
 
-func (f *Fraction) Subtract(T ...any) any {
-	if f == nil {
-		return nil // Return a default value or error to prevent nil dereference
-	}
-	for _, value := range T {
-		if f2, ok := value.(*Fraction); ok {
-			f1 := f2.Multiply(NewFraction(WithNumerator(-1)))
+func (f *Fraction) Subtract(others ...*Fraction) *Fraction {
+	temp := NewFraction(WithNumerator(f.n), WithDenominator(f.d))
 
-			return f.Add(f1)
-		}
+	for _, other := range others {
+		f1 := other.Multiply(NewFraction(WithNumerator(-1)))
+
+		temp = temp.Add(f1)
 	}
-	return nil
+
+	return temp
 }
 
-func (f *Fraction) Multiply(T ...any) any {
-	if f == nil {
-		return nil // Return a default value or error to prevent nil dereference
+func (f *Fraction) Multiply(others ...*Fraction) *Fraction {	
+	temp := NewFraction(WithNumerator(f.n), WithDenominator(f.d))
+
+	for _, other := range others {
+		temp.n = temp.n * other.n
+		temp.d = temp.d * other.d
+		temp.Simplify()
 	}
-	for _, value := range T {
-		if f2, ok := value.(*Fraction); ok {
-			temp := &Fraction{
-				n: f.n * f2.n,
-				d: f.d * f2.d,
-			}
-			temp.Simplify()
-			return temp
-		}
-	}
-	return nil
+
+	return temp
 }
 
-func (f *Fraction) Divide(T ...any) any {
-	if f == nil {
-		return nil // Return a default value or error to prevent nil dereference
+func (f *Fraction) Divide(others ...*Fraction) *Fraction {
+	temp := NewFraction(WithNumerator(f.n), WithDenominator(f.d))
+
+	for _, other := range others {
+		f1 := NewFraction(WithNumerator(other.d), WithDenominator(other.n))
+		temp = temp.Multiply(f1)
 	}
-	for _, value := range T {
-		if f2, ok := value.(*Fraction); ok {
-			f1 := NewFraction(WithNumerator(f2.d), WithDenominator(f2.n))
-			
-			return f.Multiply(f1)
-		}
-	}
-	return nil
+	
+	return temp
 }
 
 // #endregion
@@ -200,38 +206,9 @@ func (f *Fraction) Divide(T ...any) any {
 // #region Simplifiable
 
 func (f *Fraction) Simplify() {
-	factors_n := FactorInt(f.n)
-	factors_d := FactorInt(f.d)
-
-	for factor, count_n := range factors_n {
-		count := Min(count_n, factors_d[factor])
-		for i := 0; i < count; i++ {
-			factors_n[factor]--
-			factors_d[factor]--
-
-			if factors_n[factor] == 0 {
-				delete(factors_n, factor)
-			}
-
-			if factors_d[factor] == 0 {
-				delete(factors_d, factor)
-			}
-		}
-	}
-
-	f.n = 1
-	for factor, count := range factors_n {
-		for i := 0; i < count; i++ {
-			f.n *= factor
-		}
-	}
-
-	f.d = 1
-	for factor, count := range factors_d {
-		for i := 0; i < count; i++ {
-			f.d *= factor
-		}
-	}
+	g := GCF(f.n, f.d)
+	f.n /= g
+	f.d /= g
 }
 
 // #endregion
