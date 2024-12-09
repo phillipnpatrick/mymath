@@ -12,43 +12,17 @@ type Fraction struct {
 	n, d int
 }
 
-// FractionOptions gives public access to the parts of a fraction
-type FractionOptions struct {
-	Numerator   int
-	Denominator int
+func NewFraction(numerator int, denominator int) *Fraction {
+	if denominator < 0 {
+		numerator *= -1
+		denominator *= -1
+	}
+
+	return &Fraction{n: numerator, d: denominator}
 }
 
-// FractionOption 
-type FractionOption func(*FractionOptions)
-
-func WithNumerator(n int) FractionOption {
-	return func(fo *FractionOptions) {
-		fo.Numerator = n
-	}
-}
-
-func WithDenominator(d int) FractionOption {
-	return func(fo *FractionOptions) {
-		fo.Denominator = d
-	}
-}
-
-func NewFraction(options ...FractionOption) *Fraction {
-	opts := &FractionOptions{}
-	for _, option := range options {
-		option(opts)
-	}
-
-	if opts.Denominator == 0 {
-		opts.Denominator = 1
-	}
-
-	fraction := &Fraction{
-		n: opts.Numerator,
-		d: opts.Denominator,
-	}
-
-	return fraction
+func NewInteger(value int) *Fraction {
+	return &Fraction{n: value, d: 1}
 }
 
 // #endregion
@@ -68,6 +42,16 @@ func (f *Fraction) Denominator() int {
 // #endregion
 
 // #region Comparable
+
+func (f *Fraction) Compare(other *Fraction) int {
+	if f.n*other.d < other.n*f.d {
+		return -1
+	} else if f.n*other.d > other.n*f.d {
+		return 1
+	}
+
+	return 0
+}
 
 func (f *Fraction) Equals(other *Fraction) bool {
 	// Cross-multiply to compare without floating-point operations
@@ -143,7 +127,7 @@ func (f *Fraction) LaTeX() string {
 
 func (f *Fraction) Add(others ...*Fraction) *Fraction {
 	f.Simplify()
-	temp := NewFraction(WithNumerator(f.n), WithDenominator(f.d))
+	temp := NewFraction(f.n,f.d)
 
 	for _, other := range others {
 		other.Simplify()
@@ -167,10 +151,10 @@ func (f *Fraction) Add(others ...*Fraction) *Fraction {
 }
 
 func (f *Fraction) Subtract(others ...*Fraction) *Fraction {
-	temp := NewFraction(WithNumerator(f.n), WithDenominator(f.d))
+	temp := NewFraction(f.n,f.d)
 
 	for _, other := range others {
-		f1 := other.Multiply(NewFraction(WithNumerator(-1)))
+		f1 := other.Multiply(NewInteger(-1))
 
 		temp = temp.Add(f1)
 	}
@@ -179,7 +163,7 @@ func (f *Fraction) Subtract(others ...*Fraction) *Fraction {
 }
 
 func (f *Fraction) Multiply(others ...*Fraction) *Fraction {	
-	temp := NewFraction(WithNumerator(f.n), WithDenominator(f.d))
+	temp := NewFraction(f.n,f.d)
 
 	for _, other := range others {
 		temp.n = temp.n * other.n
@@ -191,10 +175,10 @@ func (f *Fraction) Multiply(others ...*Fraction) *Fraction {
 }
 
 func (f *Fraction) Divide(others ...*Fraction) *Fraction {
-	temp := NewFraction(WithNumerator(f.n), WithDenominator(f.d))
+	temp := NewFraction(f.n,f.d)
 
 	for _, other := range others {
-		f1 := NewFraction(WithNumerator(other.d), WithDenominator(other.n))
+		f1 := NewFraction(other.d,other.n)
 		temp = temp.Multiply(f1)
 	}
 	

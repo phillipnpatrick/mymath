@@ -6,5 +6,9 @@
         "Simplifiable",
         "Subtractable",
         "Subtracter"
-    ]
+    ],
+    "go.toolsEnvVars": {},
+    "go.formatTool": "gofmt",
+    "go.useLanguageServer": true,
+    "editor.formatOnSave": true
 }

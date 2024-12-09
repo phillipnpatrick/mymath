@@ -6,26 +6,20 @@ import (
 )
 
 func main() {
-    fmt.Println("Hello, World!")
+	fmt.Println("Hello, World!")
 
-	f1 := basicmath.NewFraction(
-		basicmath.WithNumerator(1),
-		basicmath.WithDenominator(2),
-	)
+	f1 := basicmath.NewFraction(1, 2)
 
-	f2 := basicmath.NewFraction(
-		basicmath.WithNumerator(1),
-		basicmath.WithDenominator(3),
-	)
+	f2 := basicmath.NewFraction(1, 3)
 
 	result := basicmath.AddTwo(f1, f2)
-	fmt.Printf("AddTwo(%v + %v) = %v\n", f1, f2, result) 			// Output: 5/6
+	fmt.Printf("AddTwo(%v + %v) = %v\n", f1, f2, result) // Output: 5/6
 	result = basicmath.DivideTwo(f1, f2)
-	fmt.Printf("DivideTwo(%v / %v) = %v\n", f1, f2, result)			// Output: 3/2
+	fmt.Printf("DivideTwo(%v / %v) = %v\n", f1, f2, result) // Output: 3/2
 	result = basicmath.MultiplyTwo(f1, f2)
-	fmt.Printf("MultiplyTwo(%v * %v) = %v\n", f1, f2, result)		// Output: 1/6
+	fmt.Printf("MultiplyTwo(%v * %v) = %v\n", f1, f2, result) // Output: 1/6
 	result = basicmath.SubtractTwo(f1, f2)
-	fmt.Printf("SubtractTwo(%v - %v) = %v\n", f1, f2, result)		// Output: 1/6
+	fmt.Printf("SubtractTwo(%v - %v) = %v\n", f1, f2, result) // Output: 1/6
 
 	// f := f1.Add(f2)
 	// fmt.Printf("%v + %v = %v\n", f1, f2, f)
@@ -59,7 +53,7 @@ func main() {
 	// )
 	// t := o1.Add(o2)
 	// fmt.Printf("%v + %v = %v\n", o1, o2, t)
-	
+
 	// result = basicmath.NewFraction(
 	// 	basicmath.WithNumerator(56),
 	// 	basicmath.WithDenominator(49),
