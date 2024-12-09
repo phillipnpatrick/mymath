@@ -126,7 +126,7 @@ func (f *Fraction) Add(T ...any) any {
 			} else {
 				lcm := LCM(f.d, f2.d)
 				left := &Fraction{n: lcm/f.d, d: lcm/f.d}
-				right := &Fraction{n: lcm/f2.d, d: lcm/f2.d}
+				right := &Fraction{n: lcm/f2.d}
 				
 				temp = &Fraction{
 					n: f.n*left.n + f2.n*right.n,
