@@ -59,4 +59,10 @@ func main() {
 	fmt.Printf("%v = %v\n", t, result.Factor())
 	result.Simplify()
 	fmt.Printf("%v + %v = %s\n", o1, o2, result)
+
+	var L interfaces.LaTeXer = basicmath.NewFraction(
+		basicmath.WithNumerator(16),
+		basicmath.WithDenominator(25),)
+
+	fmt.Printf("L: %s", L.LaTeX())
 }

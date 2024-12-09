@@ -106,6 +106,14 @@ func (f *Fraction) Factor() string {
 
 // #endregion
 
+// #region LaTeXer
+
+func (f *Fraction) LaTeX() string {
+	return fmt.Sprintf(`\dfrac{%d}{%d}`, f.n, f.d)
+}
+
+// #endregion
+
 // #region Operable
 func (f *Fraction) Add(T ...any) any {
 	if f == nil {
