@@ -432,11 +432,133 @@ func TestFraction_LaTeX(t *testing.T) {
 			f:    NewFraction(7, -8),
 			want: `-\dfrac{7}{8}`,
 		},
+		{
+			name: "Fraction_LaTeX_Test03",
+			f:    NewFraction(7, 1),
+			want: "7",
+		},
+		{
+			name: "Fraction_LaTeX_Test04",
+			f:    NewFraction(-7, 1),
+			want: "-7",
+		},
+		{
+			name: "Fraction_LaTeX_Test05",
+			f:    NewInteger(88),
+			want: "88",
+		},
+		{
+			name: "Fraction_LaTeX_Test06",
+			f:    NewInteger(0),
+			want: "0",
+		},
+		{
+			name: "Fraction_LaTeX_Test07",
+			f:    NewFraction(-7, -1),
+			want: "7",
+		},
+		{
+			name: "Fraction_LaTeX_Test08",
+			f:    NewFraction(7, -1),
+			want: "-7",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.f.LaTeX(); got != tt.want {
 				t.Errorf("Fraction.LaTeX() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFraction_IsInteger(t *testing.T) {
+	tests := []struct {
+		name string
+		f    *Fraction
+		want bool
+	}{
+		{
+			name: "Fraction_IsInteger_Test01",
+			f:    NewFraction(7, 8),
+			want: false,
+		},
+		{
+			name: "Fraction_IsInteger_Test02",
+			f:    NewFraction(7, 1),
+			want: true,
+		},
+		{
+			name: "Fraction_IsInteger_Test03",
+			f:    NewFraction(7, -1),
+			want: true,
+		},
+		{
+			name: "Fraction_IsInteger_Test04",
+			f:    NewInteger(88),
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.f.IsInteger(); got != tt.want {
+				t.Errorf("Fraction.IsInteger() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFraction_String(t *testing.T) {
+	tests := []struct {
+		name string
+		f    *Fraction
+		want string
+	}{
+		{
+			name: "Fraction_String_Test01",
+			f:    NewFraction(7, 8),
+			want: `7/8`,
+		},
+		{
+			name: "Fraction_String_Test02",
+			f:    NewFraction(7, -8),
+			want: `-7/8`,
+		},
+		{
+			name: "Fraction_String_Test03",
+			f:    NewFraction(7, 1),
+			want: "7",
+		},
+		{
+			name: "Fraction_String_Test04",
+			f:    NewFraction(-7, 1),
+			want: "-7",
+		},
+		{
+			name: "Fraction_String_Test05",
+			f:    NewInteger(88),
+			want: "88",
+		},
+		{
+			name: "Fraction_String_Test06",
+			f:    NewInteger(0),
+			want: "0",
+		},
+		{
+			name: "Fraction_String_Test07",
+			f:    NewFraction(-7, -1),
+			want: "7",
+		},
+		{
+			name: "Fraction_String_Test08",
+			f:    NewFraction(7, -1),
+			want: "-7",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.f.String(); got != tt.want {
+				t.Errorf("Fraction.String() = %v, want %v", got, tt.want)
 			}
 		})
 	}
