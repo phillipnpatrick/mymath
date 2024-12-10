@@ -7,6 +7,13 @@ import (
 
 // #region Public Methods
 
+func Abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 // AddTwo adds two Addable types
 func AddTwo[T interfaces.Addable[T]](a, b T) T {
 	return a.Add(b)
@@ -61,25 +68,18 @@ func Min(numbers ...int) int {
 
 // #region Private Methods
 
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	}
-	return x
-}
-
 func getGCF(a, b int) int {
 	for b != 0 {
 		a, b = b, a%b
 	}
-	return abs(a)
+	return Abs(a)
 }
 
 func getLCM(a,b int) int {
 	if a == 0 || b == 0 {
 		return 0
 	}
-	return abs(a*b) / getGCF(a,b)
+	return Abs(a*b) / getGCF(a,b)
 }
 
 func getMin(a, b int) int {

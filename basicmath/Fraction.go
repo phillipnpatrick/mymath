@@ -86,7 +86,7 @@ func (f *Fraction) Factor() string {
 	var denom strings.Builder
 
 	for factor, count := range factors_n {
-		for i := 0; i < count; i++ {		
+		for i := 0; i < count; i++ {
 			if num.Len() > 0 {
 				num.WriteString(" * ")
 			}
@@ -95,7 +95,7 @@ func (f *Fraction) Factor() string {
 	}
 
 	for factor, count := range factors_d {
-		for i := 0; i < count; i++ {		
+		for i := 0; i < count; i++ {
 			if denom.Len() > 0 {
 				denom.WriteString(" * ")
 			}
@@ -118,6 +118,14 @@ func (f *Fraction) Factor() string {
 // #region LaTeXer
 
 func (f *Fraction) LaTeX() string {
+	if f.d == 1 {
+		return fmt.Sprintf("%d", f.n)
+	}
+
+	if f.n < 0 || f.d < 0 {
+		return fmt.Sprintf(`-\dfrac{%d}{%d}`, Abs(f.n), Abs(f.d))
+	}
+
 	return fmt.Sprintf(`\dfrac{%d}{%d}`, f.n, f.d)
 }
 
@@ -127,21 +135,21 @@ func (f *Fraction) LaTeX() string {
 
 func (f *Fraction) Add(others ...*Fraction) *Fraction {
 	f.Simplify()
-	temp := NewFraction(f.n,f.d)
+	temp := NewFraction(f.n, f.d)
 
 	for _, other := range others {
 		other.Simplify()
 
 		if temp.d == other.d {
 			temp.n = temp.n + other.n
-			temp.d= other.d
+			temp.d = other.d
 		} else {
 			lcm := LCM(temp.d, other.d)
-			left := &Fraction{n: lcm/temp.d, d: lcm/temp.d}
-			right := &Fraction{n: lcm/other.d, d: lcm/other.d}
-			
+			left := &Fraction{n: lcm / temp.d, d: lcm / temp.d}
+			right := &Fraction{n: lcm / other.d, d: lcm / other.d}
+
 			temp.n = temp.n*left.n + other.n*right.n
-			temp.d = temp.d*left.d
+			temp.d = temp.d * left.d
 		}
 
 		temp.Simplify()
@@ -151,7 +159,7 @@ func (f *Fraction) Add(others ...*Fraction) *Fraction {
 }
 
 func (f *Fraction) Subtract(others ...*Fraction) *Fraction {
-	temp := NewFraction(f.n,f.d)
+	temp := NewFraction(f.n, f.d)
 
 	for _, other := range others {
 		f1 := other.Multiply(NewInteger(-1))
@@ -162,8 +170,8 @@ func (f *Fraction) Subtract(others ...*Fraction) *Fraction {
 	return temp
 }
 
-func (f *Fraction) Multiply(others ...*Fraction) *Fraction {	
-	temp := NewFraction(f.n,f.d)
+func (f *Fraction) Multiply(others ...*Fraction) *Fraction {
+	temp := NewFraction(f.n, f.d)
 
 	for _, other := range others {
 		temp.n = temp.n * other.n
@@ -175,13 +183,13 @@ func (f *Fraction) Multiply(others ...*Fraction) *Fraction {
 }
 
 func (f *Fraction) Divide(others ...*Fraction) *Fraction {
-	temp := NewFraction(f.n,f.d)
+	temp := NewFraction(f.n, f.d)
 
 	for _, other := range others {
-		f1 := NewFraction(other.d,other.n)
+		f1 := NewFraction(other.d, other.n)
 		temp = temp.Multiply(f1)
 	}
-	
+
 	return temp
 }
 
@@ -205,6 +213,14 @@ func (f *Fraction) String() string {
 	}
 
 	return fmt.Sprintf("%d/%d", f.n, f.d)
+}
+
+// #endregion
+
+// #region Public Methods
+
+func (f *Fraction) IsInteger() bool {
+	return f.d == 1
 }
 
 // #endregion
