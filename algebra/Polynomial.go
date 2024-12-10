@@ -1,6 +1,9 @@
 package algebra
 
-import "fmt"
+import (
+	"mymath/basicmath"
+	"strings"
+)
 
 type Polynomial struct {
 	monomials []*Monomial
@@ -31,12 +34,12 @@ func (p *Polynomial) Equals(other *Polynomial) bool {
 	m2 := make(map[string]*Monomial)
 
 	for _, mono := range p.monomials {
-		key := fmt.Sprintf("%s^%s", mono.letter, mono.degree.String())
+		key := mono.String()
 		m1[key] = mono
 	}
 
 	for _, mono := range other.monomials {
-		key := fmt.Sprintf("%s^%s", mono.letter, mono.degree.String())
+		key := mono.String()
 		m2[key] = mono
 	}
 
@@ -57,14 +60,44 @@ func (p *Polynomial) Equals(other *Polynomial) bool {
 
 func (p *Polynomial) AddMonomial(m *Monomial) {
 	for i, mono := range p.monomials {
-		if mono.letter == m.letter && mono.degree.Equals(m.degree) {
-			// Combine coefficients if monomials are similar
+		if AreLikeTerms(m, mono) {
 			p.monomials[i].coefficient = p.monomials[i].coefficient.Add(m.coefficient)
 			return
 		}
+		// if mono.letter == m.letter && mono.degree.Equals(m.degree) {
+		// 	// Combine coefficients if monomials are similar
+		// 	p.monomials[i].coefficient = p.monomials[i].coefficient.Add(m.coefficient)
+		// 	return
+		// }
 	}
 	// If no similar monomial is found, append it
 	p.monomials = append(p.monomials, m)
+}
+
+// #endregion
+
+// #region Stringer
+
+func (p *Polynomial) String() string {
+	var sb strings.Builder
+
+	for _, monomial := range p.monomials {
+		if sb.Len() > 0 {
+			var temp *Monomial
+			if monomial.coefficient.LessThan(basicmath.NewInteger(0)) {
+				sb.WriteString(" - ")
+				temp = NewMonomialWithVariables(monomial.coefficient.Multiply(basicmath.NewInteger(-1)), monomial.variables...)
+			} else {
+				sb.WriteString(" + ")
+				temp = NewMonomialWithVariables(monomial.coefficient, monomial.variables...)
+			}
+			sb.WriteString(temp.String())
+		} else {
+			sb.WriteString(monomial.String())
+		}
+	}
+
+	return sb.String()
 }
 
 // #endregion
