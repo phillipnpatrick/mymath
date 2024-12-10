@@ -48,7 +48,7 @@ func (v Variable) LaTeX() string {
 		return fmt.Sprintf("%s^%s", string(v.letter), v.degree.LaTeX())
 	}
 
-	return fmt.Sprintf("%s^\\left(%s\\right)", string(v.letter), v.degree.LaTeX())
+	return fmt.Sprintf(`%s^\left(%s\right)`, string(v.letter), v.degree.LaTeX())
 }
 
 // #endregion
@@ -59,7 +59,7 @@ func (v Variable) String() string {
 	if v.degree.Equals(basicmath.NewInteger(0)) {
 		return ""
 	}
-	
+
 	if v.degree.Equals(basicmath.NewInteger(1)) {
 		return string(v.letter)
 	}

@@ -415,3 +415,29 @@ func TestFraction_Divide(t *testing.T) {
 		})
 	}
 }
+
+func TestFraction_LaTeX(t *testing.T) {
+	tests := []struct {
+		name string
+		f    *Fraction
+		want string
+	}{
+		{
+			name: "Fraction_LaTeX_Test01",
+			f:    NewFraction(7, 8),
+			want: `\dfrac{7}{8}`,
+		},
+		{
+			name: "Fraction_LaTeX_Test02",
+			f:    NewFraction(7, -8),
+			want: `-\dfrac{7}{8}`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.f.LaTeX(); got != tt.want {
+				t.Errorf("Fraction.LaTeX() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
