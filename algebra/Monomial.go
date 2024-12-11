@@ -4,49 +4,97 @@ import (
 	"fmt"
 	"mymath/basicmath"
 	"sort"
+	"strconv"
 	"strings"
+	"unicode"
 )
 
 type Monomial struct {
 	coefficient *basicmath.Fraction
-	variables []*Variable
+	variables   []*Variable         // Example: (x^2)(y^3)
+	degree      *basicmath.Fraction // Total degree of the term
 }
 
 // #region Monomial Constructors
 
 func NewMonomial(coefficient *basicmath.Fraction, letter string) *Monomial {
-	return &Monomial{
+	m := &Monomial{
 		coefficient: coefficient,
-		variables: []*Variable{NewVariableWithDegree(letter, basicmath.NewInteger(1))},
+		variables:   []*Variable{NewVariableWithExponent(letter, basicmath.NewInteger(1))},
 	}
+
+	m.degree = m.Degree()
+
+	return m
 }
 
 func NewMonomialConstant(coefficient *basicmath.Fraction) *Monomial {
-	return &Monomial{
+	m := &Monomial{
 		coefficient: coefficient,
-		variables: []*Variable{NewVariableWithDegree("x", basicmath.NewInteger(0))},
 	}
+
+	m.degree = m.Degree()
+
+	return m
 }
 
-func NewMonomialWithDegree(coefficient *basicmath.Fraction, letter string, degree *basicmath.Fraction) *Monomial {
-	return &Monomial{
+func NewMonomialWithExponent(coefficient *basicmath.Fraction, letter string, exponent *basicmath.Fraction) *Monomial {
+	m := &Monomial{
 		coefficient: coefficient,
-		variables: []*Variable{NewVariableWithDegree(letter, degree)},
+		variables:   []*Variable{NewVariableWithExponent(letter, exponent)},
 	}
+
+	m.degree = m.Degree()
+
+	return m
 }
 
 func NewMonomialWithVariables(coefficient *basicmath.Fraction, variables ...*Variable) *Monomial {
-	return &Monomial{
+	m := &Monomial{
 		coefficient: coefficient,
 		variables:   variables,
 	}
+
+	m.degree = m.Degree()
+
+	return m
+}
+
+// #endregion
+
+// #region Properties
+
+// The total degree of the monomial (a sum of the exponents)
+func (m *Monomial) Degree() *basicmath.Fraction {
+	if m.degree == nil {
+		m.degree = basicmath.NewInteger(0)
+		if len(m.variables) > 0 {
+			if m.variables[0].exponent != nil {
+				m.degree = basicmath.NewFraction(m.variables[0].exponent.Numerator(), m.variables[0].exponent.Denominator())
+				for _, variable := range m.variables[1:] {
+					m.degree = m.degree.Add(variable.exponent)
+				}
+			}
+		}
+	}
+	return m.degree
+}
+
+// A string representation of the variables (without coefficient)
+func (m *Monomial) Variables() string {
+	var sb strings.Builder
+	for _, variable := range m.variables {
+		sb.WriteString(variable.String())
+	}
+
+	return sb.String()
 }
 
 // #endregion
 
 // #region Comparable
 
-func (m *Monomial) Equals(other *Monomial) bool {// Check if the number of monomials is the same
+func (m *Monomial) Equals(other *Monomial) bool { // Check if the number of monomials is the same
 	if len(m.variables) != len(other.variables) {
 		return false
 	}
@@ -54,18 +102,18 @@ func (m *Monomial) Equals(other *Monomial) bool {// Check if the number of monom
 	if !m.coefficient.Equals(other.coefficient) {
 		return false
 	}
-	
+
 	// Create maps to track variables by their variable and degree
 	v1 := make(map[string]*Variable)
 	v2 := make(map[string]*Variable)
 
 	for _, variable := range m.variables {
-		key := fmt.Sprintf("%s^%s", string(variable.letter), variable.degree.String())
+		key := fmt.Sprintf("%s^%s", string(variable.letter), variable.exponent.String())
 		v1[key] = variable
 	}
 
 	for _, variable := range other.variables {
-		key := fmt.Sprintf("%s^%s", string(variable.letter), variable.degree.String())
+		key := fmt.Sprintf("%s^%s", string(variable.letter), variable.exponent.String())
 		v2[key] = variable
 	}
 
@@ -77,7 +125,7 @@ func (m *Monomial) Equals(other *Monomial) bool {// Check if the number of monom
 		}
 	}
 
-	return true	
+	return true
 }
 
 // #endregion
@@ -194,6 +242,29 @@ func AreLikeTerms(monomials ...*Monomial) bool {
 	return like
 }
 
+func ParseToVariables(variables string) []*Variable {
+	if variables == "" {
+		return nil
+	}
+	vars := []*Variable{}
+	var sb strings.Builder
+
+	for _, char := range variables {
+		if unicode.IsLetter(char) && sb.Len() > 0 {
+			vars = append(vars, parseToVariable(sb.String()))
+
+			sb.Reset()
+		}
+		sb.WriteRune(char)
+	}
+
+	if sb.Len() > 0 {
+		vars = append(vars, parseToVariable(sb.String()))
+	}
+
+	return vars
+}
+
 // #endregion
 
 // #region Private Methods
@@ -208,12 +279,12 @@ func areLike(a, b *Monomial) bool {
 	v2 := make(map[string]*Variable)
 
 	for _, variable := range a.variables {
-		key := fmt.Sprintf("%s^%s", string(variable.letter), variable.degree.String())
+		key := fmt.Sprintf("%s^%s", string(variable.letter), variable.exponent.String())
 		v1[key] = variable
 	}
 
 	for _, variable := range b.variables {
-		key := fmt.Sprintf("%s^%s", string(variable.letter), variable.degree.String())
+		key := fmt.Sprintf("%s^%s", string(variable.letter), variable.exponent.String())
 		v2[key] = variable
 	}
 
@@ -225,7 +296,26 @@ func areLike(a, b *Monomial) bool {
 		}
 	}
 
-	return true	
+	return true
+}
+
+func parseToVariable(part string) *Variable {
+	var letter string
+	numerator, denominator := 1, 1
+
+	for _, item := range part {
+		if unicode.IsLetter(item) {
+			letter = string(item)
+		} else if unicode.IsNumber(item) {
+			if numerator == 1 {
+				numerator, _ = strconv.Atoi(string(item))
+			} else if denominator == 1 {
+				denominator, _ = strconv.Atoi(string(item))
+			}
+		}
+	}
+
+	return NewVariableWithExponent(letter, basicmath.NewFraction(numerator, denominator))
 }
 
 func sortString(s string) string {

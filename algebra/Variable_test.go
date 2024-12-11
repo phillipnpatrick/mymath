@@ -29,14 +29,14 @@ func TestVariable_Equals(t *testing.T) {
 		},
 		{
 			name: "Variable_Equals_Test03",
-			v:    NewVariableWithDegree("c", basicmath.NewInteger(1)),
-			args: args{other: NewVariableWithDegree("c", basicmath.NewInteger(1))},
+			v:    NewVariableWithExponent("c", basicmath.NewInteger(1)),
+			args: args{other: NewVariableWithExponent("c", basicmath.NewInteger(1))},
 			want: true,
 		},
 		{
 			name: "Variable_Equals_Test04",
-			v:    NewVariableWithDegree("c", basicmath.NewInteger(0)),
-			args: args{other: NewVariableWithDegree("c", basicmath.NewInteger(1))},
+			v:    NewVariableWithExponent("c", basicmath.NewInteger(0)),
+			args: args{other: NewVariableWithExponent("c", basicmath.NewInteger(1))},
 			want: false,
 		},
 		{
@@ -68,22 +68,22 @@ func TestVariable_LaTeX(t *testing.T) {
 		},
 		{
 			name: "Variable_LaTeX_Test02",
-			v:    *NewVariableWithDegree("a", basicmath.NewInteger(0)),
+			v:    *NewVariableWithExponent("a", basicmath.NewInteger(0)),
 			want: "",
 		},
 		{
 			name: "Variable_LaTeX_Test03",
-			v:    *NewVariableWithDegree("a", basicmath.NewInteger(8)),
+			v:    *NewVariableWithExponent("a", basicmath.NewInteger(8)),
 			want: "a^8",
 		},
 		{
 			name: "Variable_LaTeX_Test04",
-			v:    *NewVariableWithDegree("a", basicmath.NewFraction(1, 2)),
+			v:    *NewVariableWithExponent("a", basicmath.NewFraction(1, 2)),
 			want: `a^\left(\dfrac{1}{2}\right)`,
 		},
 		{
 			name: "Variable_LaTeX_Test05",
-			v:    *NewVariableWithDegree("a", basicmath.NewFraction(-1, 2)),
+			v:    *NewVariableWithExponent("a", basicmath.NewFraction(-1, 2)),
 			want: `a^\left(-\dfrac{1}{2}\right)`,
 		},
 	}
@@ -109,22 +109,22 @@ func TestVariable_String(t *testing.T) {
 		},
 		{
 			name: "Variable_String_Test02",
-			v:    *NewVariableWithDegree("a", basicmath.NewInteger(0)),
+			v:    *NewVariableWithExponent("a", basicmath.NewInteger(0)),
 			want: "",
 		},
 		{
 			name: "Variable_String_Test03",
-			v:    *NewVariableWithDegree("a", basicmath.NewInteger(8)),
+			v:    *NewVariableWithExponent("a", basicmath.NewInteger(8)),
 			want: "a^8",
 		},
 		{
 			name: "Variable_String_Test04",
-			v:    *NewVariableWithDegree("a", basicmath.NewFraction(1, 2)),
+			v:    *NewVariableWithExponent("a", basicmath.NewFraction(1, 2)),
 			want: `a^(1/2)`,
 		},
 		{
 			name: "Variable_String_Test05",
-			v:    *NewVariableWithDegree("a", basicmath.NewFraction(-1, 2)),
+			v:    *NewVariableWithExponent("a", basicmath.NewFraction(-1, 2)),
 			want: `a^(-1/2)`,
 		},
 	}
@@ -161,13 +161,13 @@ func TestVariable_IsLikeTerm(t *testing.T) {
 		},
 		{
 			name: "Variable_IsLikeTerm_Test03",
-			v:    *NewVariableWithDegree("a", basicmath.NewInteger(2)),
-			args: args{other: *NewVariableWithDegree("a", basicmath.NewInteger(2))},
+			v:    *NewVariableWithExponent("a", basicmath.NewInteger(2)),
+			args: args{other: *NewVariableWithExponent("a", basicmath.NewInteger(2))},
 			want: true,
 		},
 		{
 			name: "Variable_IsLikeTerm_Test04",
-			v:    *NewVariableWithDegree("a", basicmath.NewInteger(2)),
+			v:    *NewVariableWithExponent("a", basicmath.NewInteger(2)),
 			args: args{other: *NewVariable("a")},
 			want: false,
 		},
