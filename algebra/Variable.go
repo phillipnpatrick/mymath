@@ -65,6 +65,10 @@ func (v Variable) LaTeX() string {
 
 // #endregion
 
+// #region Operable
+
+// #endregion
+
 // #region Stringer
 
 func (v Variable) String() string {
@@ -86,6 +90,10 @@ func (v Variable) String() string {
 // #endregion
 
 // #region Public Methods
+
+func AreLikeVariables(a, b Variable) bool {
+	return a.letter == b.letter
+}
 
 func (v Variable) IsLikeTerm(other Variable) bool {
 	return v.letter == other.letter && v.exponent.Equals(other.exponent)

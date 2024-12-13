@@ -162,7 +162,18 @@ func TestMonomial_Subtract(t *testing.T) {
 		args args
 		want *Polynomial
 	}{
-		// TODO: Add test cases.
+		{ // 3x^2 - 5x - 2x^2 - 4x
+			name: "Monomial_Subtract_Test01",
+			m:    NewMonomialWithExponent(basicmath.NewInteger(3), "x", basicmath.NewInteger(2)),
+			args: args{others: []*Monomial{
+				NewMonomial(basicmath.NewInteger(5), "x"),
+				NewMonomialWithExponent(basicmath.NewInteger(2), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewInteger(4), "x"),
+			}},
+			want: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewInteger(1), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewInteger(-9), "x")),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -235,6 +246,31 @@ func TestMonomial_LaTeX(t *testing.T) {
 				NewVariableWithExponent("b", basicmath.NewInteger(3)),
 				NewVariableWithExponent("c", basicmath.NewInteger(4))),
 			want: "9a^2b^3c^4",
+		},
+		{
+			name: "Monomial_LaTeX_Test03",
+			m: *NewMonomialConstant(basicmath.NewInteger(-1)),
+			want: "-1",
+		},
+		{
+			name: "Monomial_LaTeX_Test04",
+			m: *NewMonomialConstant(basicmath.NewInteger(0)),
+			want: "0",
+		},
+		{
+			name: "Monomial_LaTeX_Test05",
+			m: *NewMonomialConstant(basicmath.NewInteger(1)),
+			want: "1",
+		},
+		{
+			name: "Monomial_LaTeX_Test06",
+			m: *NewMonomialWithExponent(basicmath.NewInteger(-1), "m", basicmath.NewInteger(2)),
+			want: "-m^2",
+		},
+		{
+			name: "Monomial_LaTeX_Test07",
+			m: *NewMonomialWithExponent(basicmath.NewInteger(1), "m", basicmath.NewInteger(2)),
+			want: "m^2",
 		},
 	}
 	for _, tt := range tests {
@@ -331,12 +367,12 @@ func TestMonomial_Degree(t *testing.T) {
 		},
 		{ // 88
 			name: "Monomial_Degree_Test07",
-			m: 	&Monomial{coefficient: basicmath.NewInteger(88)},
+			m:    &Monomial{coefficient: basicmath.NewInteger(88)},
 			want: basicmath.NewInteger(0),
 		},
 		{ // x
 			name: "Monomial_Degree_Test08",
-			m: 	&Monomial{variables: []*Variable{{letter: 'x'}},},
+			m:    &Monomial{variables: []*Variable{{letter: 'x'}}},
 			want: basicmath.NewInteger(0),
 		},
 	}
@@ -368,6 +404,208 @@ func TestParseToVariables(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ParseToVariables(tt.args.variables); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ParseToVariables() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMonomial_Multiply(t *testing.T) {
+	type args struct {
+		others []*Monomial
+	}
+	tests := []struct {
+		name string
+		m    *Monomial
+		args args
+		want *Monomial
+	}{
+		{ // 3x^2 -* 5x^3 = 15x^5
+			name: "Monomial_Multiply_Test01",
+			m:    NewMonomialWithExponent(basicmath.NewInteger(3), "x", basicmath.NewInteger(2)),
+			args: args{others: []*Monomial{
+				NewMonomialWithExponent(basicmath.NewInteger(5), "x", basicmath.NewInteger(3)),
+			}},
+			want: NewMonomialWithExponent(basicmath.NewInteger(15), "x", basicmath.NewInteger(5)),
+		},
+		{ // -2a^3 * 4a^2 = -8a^5
+			name: "Monomial_Multiply_Test02",
+			m:    NewMonomialWithExponent(basicmath.NewInteger(-2), "a", basicmath.NewInteger(3)),
+			args: args{others: []*Monomial{
+				NewMonomialWithExponent(basicmath.NewInteger(4), "a", basicmath.NewInteger(2)),
+			}},
+			want: NewMonomialWithExponent(basicmath.NewInteger(-8), "a", basicmath.NewInteger(5)),
+		},
+		{ // 6m^2n * 2m^3n^4 = 12m^5n^5
+			name: "Monomial_Multiply_Test03",
+			m: NewMonomialWithVariables(basicmath.NewInteger(6),
+				NewVariableWithExponent("m", basicmath.NewInteger(2)),
+				NewVariable("n")),
+			args: args{others: []*Monomial{
+				NewMonomialWithVariables(basicmath.NewInteger(2),
+					NewVariableWithExponent("m", basicmath.NewInteger(3)),
+					NewVariableWithExponent("n", basicmath.NewInteger(4))),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(12),
+				NewVariableWithExponent("m", basicmath.NewInteger(5)),
+				NewVariableWithExponent("n", basicmath.NewInteger(5))),
+		},
+		{ // 4p^3q^2 * -5p^4q^4 = -20p^7q^6
+			name: "Monomial_Multiply_Test04",
+			m: NewMonomialWithVariables(basicmath.NewInteger(4),
+				NewVariableWithExponent("p", basicmath.NewInteger(3)),
+				NewVariableWithExponent("q", basicmath.NewInteger(2))),
+			args: args{others: []*Monomial{
+				NewMonomialWithVariables(basicmath.NewInteger(-5),
+					NewVariableWithExponent("p", basicmath.NewInteger(4)),
+					NewVariableWithExponent("q", basicmath.NewInteger(4))),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(-20),
+				NewVariableWithExponent("p", basicmath.NewInteger(7)),
+				NewVariableWithExponent("q", basicmath.NewInteger(6))),
+		},
+		{ // -7x^2y^3 * 3xy^2 = -21x^3y^5
+			name: "Monomial_Multiply_Test05",
+			m: NewMonomialWithVariables(basicmath.NewInteger(-7),
+				NewVariableWithExponent("x", basicmath.NewInteger(2)),
+				NewVariableWithExponent("y", basicmath.NewInteger(3))),
+			args: args{others: []*Monomial{
+				NewMonomialWithVariables(basicmath.NewInteger(3),
+					NewVariable("x"),
+					NewVariableWithExponent("y", basicmath.NewInteger(2))),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(-21),
+				NewVariableWithExponent("x", basicmath.NewInteger(3)),
+				NewVariableWithExponent("y", basicmath.NewInteger(5))),
+		},
+		{ // a * b = ab
+			name: "Monomial_Multiply_Test06",
+			m:    NewMonomial(basicmath.NewInteger(1), "a"),
+			args: args{others: []*Monomial{
+				NewMonomial(basicmath.NewInteger(1), "b"),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(1), NewVariable("a"), NewVariable("b")),
+		},
+		{ // ab * b = ab^2
+			name: "Monomial_Multiply_Test07",
+			m:    NewMonomialWithVariables(basicmath.NewInteger(1), NewVariable("a"), NewVariable("b")),
+			args: args{others: []*Monomial{
+				NewMonomial(basicmath.NewInteger(1), "b"),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(1), NewVariable("a"), NewVariableWithExponent("b", basicmath.NewInteger(2))),
+		},
+		{ // ab * bc = ab^2c
+			name: "Monomial_Multiply_Test08",
+			m:    NewMonomialWithVariables(basicmath.NewInteger(1), NewVariable("a"), NewVariable("b")),
+			args: args{others: []*Monomial{
+				NewMonomialWithVariables(basicmath.NewInteger(1), NewVariable("b"), NewVariable("c")),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(1), 
+			NewVariable("a"), 
+			NewVariableWithExponent("b", basicmath.NewInteger(2)),
+			NewVariable("c"), ),
+		},
+		{ // c * a * b = abc
+			name: "Monomial_Multiply_Test09",
+			m:    NewMonomial(basicmath.NewInteger(1), "c"),
+			args: args{others: []*Monomial{
+				NewMonomial(basicmath.NewInteger(1), "a"),
+				NewMonomial(basicmath.NewInteger(1), "b"),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(1), NewVariable("a"), NewVariable("b"), NewVariable("c")),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.m.Multiply(tt.args.others...)
+			if !reflect.DeepEqual(got, tt.want) {
+				compareValues("coefficient", got.coefficient, tt.want.coefficient)
+				compareValues("degree", got.degree, tt.want.degree)
+				compareValues("variables", got.variables, tt.want.variables)
+				t.Errorf("Monomial.Multiply() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMonomial_Divide(t *testing.T) {
+	type args struct {
+		others []*Monomial
+	}
+	tests := []struct {
+		name string
+		m    *Monomial
+		args args
+		want *Monomial
+	}{
+		{ // 12x^5 / 4x^2 = 3x^3
+			name: "Monomial_Divide_Test01",
+			m: NewMonomialWithVariables(basicmath.NewInteger(12),
+				NewVariableWithExponent("x", basicmath.NewInteger(5))),
+			args: args{others: []*Monomial{
+				NewMonomialWithVariables(basicmath.NewInteger(4),
+					NewVariableWithExponent("x", basicmath.NewInteger(2))),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(3),
+				NewVariableWithExponent("x", basicmath.NewInteger(3))),
+		},
+		{ // -15a^7 / 5a^3 = -3a^4
+			name: "Monomial_Divide_Test02",
+			m: NewMonomialWithVariables(basicmath.NewInteger(-15),
+				NewVariableWithExponent("a", basicmath.NewInteger(7))),
+			args: args{others: []*Monomial{
+				NewMonomialWithVariables(basicmath.NewInteger(5),
+					NewVariableWithExponent("a", basicmath.NewInteger(3))),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(-3),
+				NewVariableWithExponent("a", basicmath.NewInteger(4))),
+		},
+		{ // 18m^6n^4 / 6m^2n^3 = 3m^2n^3
+			name: "Monomial_Divide_Test03",
+			m: NewMonomialWithVariables(basicmath.NewInteger(18),
+				NewVariableWithExponent("m", basicmath.NewInteger(6)),
+				NewVariableWithExponent("n", basicmath.NewInteger(4))),
+			args: args{others: []*Monomial{
+				NewMonomialWithVariables(basicmath.NewInteger(6),
+					NewVariableWithExponent("m", basicmath.NewInteger(2)),
+					NewVariableWithExponent("n", basicmath.NewInteger(3))),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(3),
+				NewVariableWithExponent("m", basicmath.NewInteger(4)),
+				NewVariable("n")),
+		},
+		{ // -24x^8y^5 / 8x^3y^2 = -3x^5y^3
+			name: "Monomial_Divide_Test04",
+			m: NewMonomialWithVariables(basicmath.NewInteger(-24),
+				NewVariableWithExponent("x", basicmath.NewInteger(8)),
+				NewVariableWithExponent("y", basicmath.NewInteger(5))),
+			args: args{others: []*Monomial{
+				NewMonomialWithVariables(basicmath.NewInteger(8),
+					NewVariableWithExponent("x", basicmath.NewInteger(3)),
+					NewVariableWithExponent("y", basicmath.NewInteger(2))),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(-3),
+				NewVariableWithExponent("x", basicmath.NewInteger(5)),
+				NewVariableWithExponent("y", basicmath.NewInteger(3))),
+		},
+		{ // 40p^9q^7 / 10p^4q^3 = 4p^5q^4
+			name: "Monomial_Divide_Test05",
+			m: NewMonomialWithVariables(basicmath.NewInteger(40),
+				NewVariableWithExponent("p", basicmath.NewInteger(9)),
+				NewVariableWithExponent("q", basicmath.NewInteger(7))),
+			args: args{others: []*Monomial{
+				NewMonomialWithVariables(basicmath.NewInteger(10),
+					NewVariableWithExponent("p", basicmath.NewInteger(4)),
+					NewVariableWithExponent("q", basicmath.NewInteger(3))),
+			}},
+			want: NewMonomialWithVariables(basicmath.NewInteger(4),
+				NewVariableWithExponent("p", basicmath.NewInteger(5)),
+				NewVariableWithExponent("q", basicmath.NewInteger(4))),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.m.Divide(tt.args.others...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Monomial.Divide() = %v, want %v", got, tt.want)
 			}
 		})
 	}

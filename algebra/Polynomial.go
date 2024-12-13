@@ -96,6 +96,53 @@ func (p *Polynomial) AddMonomial(m *Monomial) {
 	p.monomials = append(p.monomials, m)
 }
 
+func (p *Polynomial) Add(others ...*Polynomial) *Polynomial {
+	temp := NewPolynomial(p.monomials...)
+
+	for _, other := range others {
+		for _, mono := range other.monomials {
+			temp.AddMonomial(mono)
+		}
+	}
+
+	return temp.StandardForm()
+}
+
+func (p *Polynomial) Subtract(others ...*Polynomial) *Polynomial {
+	temp := NewPolynomial(p.monomials...)
+
+	for _, other := range others {
+		for _, mono := range other.monomials {
+			temp.AddMonomial(mono.Multiply(NewMonomialConstant(basicmath.NewInteger(-1))))
+		}
+	}
+
+	return temp.StandardForm()
+}
+
+func (p *Polynomial) Multiply(others ...*Polynomial) *Polynomial {
+	if len(others) == 0 {
+		return p
+	}
+	var monomials []*Monomial
+
+	product := multiplyTwoPolynomials(p, others[0])
+	monomials = append(monomials, product...)
+	temp := NewPolynomial(monomials...)
+
+	if len(others) > 1 {
+		monomials = monomials[:0]
+
+		for _, other := range others[1:] {
+			product = multiplyTwoPolynomials(temp, other)
+			monomials = append(monomials, product...)
+			temp.monomials = append(temp.monomials, monomials...)
+		}
+	}
+
+	return NewPolynomial(monomials...).StandardForm()
+}
+
 func (p *Polynomial) StandardForm() *Polynomial {
 	// Rules:
 	// Degree of term: a(x^m)(y^n), degree is m+n
@@ -130,7 +177,7 @@ func (p *Polynomial) StandardForm() *Polynomial {
 	}
 
 	// Sort monomials by degree (descending) and then alphabetically
-	sort.Slice(p.monomials, func(i int, j int) bool{
+	sort.Slice(p.monomials, func(i int, j int) bool {
 		a := p.monomials[i]
 		b := p.monomials[j]
 		if a.Degree().Equals(b.Degree()) {
@@ -172,6 +219,23 @@ func (p *Polynomial) String() string {
 	}
 
 	return sb.String()
+}
+
+// #endregion
+
+// #region Private Methods
+
+func multiplyTwoPolynomials(a, b *Polynomial) []*Monomial {
+	var monomials []*Monomial
+
+	for _, am := range a.monomials {
+		for _, bm := range b.monomials {
+			temp := am.Multiply(bm)
+			monomials = append(monomials, temp)
+		}
+	}
+
+	return monomials
 }
 
 // #endregion

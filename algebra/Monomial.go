@@ -23,7 +23,7 @@ func NewMonomial(coefficient *basicmath.Fraction, letter string) *Monomial {
 		variables:   []*Variable{NewVariableWithExponent(letter, basicmath.NewInteger(1))},
 	}
 
-	m.degree = m.Degree()
+	m.degree = calculateDegree(m)
 
 	return m
 }
@@ -33,7 +33,7 @@ func NewMonomialConstant(coefficient *basicmath.Fraction) *Monomial {
 		coefficient: coefficient,
 	}
 
-	m.degree = m.Degree()
+	m.degree = calculateDegree(m)
 
 	return m
 }
@@ -44,7 +44,7 @@ func NewMonomialWithExponent(coefficient *basicmath.Fraction, letter string, exp
 		variables:   []*Variable{NewVariableWithExponent(letter, exponent)},
 	}
 
-	m.degree = m.Degree()
+	m.degree = calculateDegree(m)
 
 	return m
 }
@@ -55,7 +55,7 @@ func NewMonomialWithVariables(coefficient *basicmath.Fraction, variables ...*Var
 		variables:   variables,
 	}
 
-	m.degree = m.Degree()
+	m.degree = calculateDegree(m)
 
 	return m
 }
@@ -66,17 +66,7 @@ func NewMonomialWithVariables(coefficient *basicmath.Fraction, variables ...*Var
 
 // The total degree of the monomial (a sum of the exponents)
 func (m *Monomial) Degree() *basicmath.Fraction {
-	if m.degree == nil {
-		m.degree = basicmath.NewInteger(0)
-		if len(m.variables) > 0 {
-			if m.variables[0].exponent != nil {
-				m.degree = basicmath.NewFraction(m.variables[0].exponent.Numerator(), m.variables[0].exponent.Denominator())
-				for _, variable := range m.variables[1:] {
-					m.degree = m.degree.Add(variable.exponent)
-				}
-			}
-		}
-	}
+	m.degree = calculateDegree(m)
 	return m.degree
 }
 
@@ -138,8 +128,14 @@ func (m *Monomial) Equals(other *Monomial) bool { // Check if the number of mono
 func (m Monomial) LaTeX() string {
 	c := fmt.Sprintf("%v", m.coefficient.LaTeX())
 
+	if len(m.variables) == 0 {
+		return c
+	}
+
 	if m.coefficient.Equals(basicmath.NewInteger(1)) {
 		c = ""
+	} else if m.coefficient.Equals(basicmath.NewInteger(-1)) {
+		c = "-"
 	}
 
 	var sb strings.Builder
@@ -178,35 +174,48 @@ func (m *Monomial) Subtract(others ...*Monomial) *Polynomial {
 	return p
 }
 
-// func (m *Monomial) Multiply(others ...*Monomial) *Polynomial {
-// 	temp := NewMonomialWithDegree(m.coefficient, m.letter, m.degree)
+func (m *Monomial) Multiply(others ...*Monomial) *Monomial {
+	// temp := NewMonomialWithVariables(m.coefficient, m.variables...)
+	temp := makeCopy(*m)
 
-// 	for _, other := range others {
-// 		if AreLikeTerms(temp, other) {
-// 			temp.coefficient = temp.coefficient.Multiply(other.coefficient)
-// 			temp.degree = temp.degree.Add(other.degree)
-// 		} else {
-// 			return nil
-// 		}
-// 	}
+	for _, other := range others {
+		temp = multiplyTwoMonomials(*temp, *other)
+		// temp.coefficient = temp.coefficient.Multiply(other.coefficient)
+		// if len(temp.variables) == 0 {
+		// 	temp.variables = other.variables
+		// } else {
+		// 	for i, tempVar := range temp.variables {
+		// 		for _, otherVar := range other.variables {
+		// 			if tempVar.letter == otherVar.letter {
+		// 				temp.variables[i].exponent = tempVar.exponent.Add(otherVar.exponent)
+		// 			}
+		// 		}
+		// 	}
+		// }
+	}
+	temp.degree = calculateDegree(temp)
 
-// 	return temp
-// }
+	return temp
+}
 
-// func (m *Monomial) Divide(others ...*Monomial) *Polynomial {
-// 	temp := NewMonomialWithDegree(m.coefficient, m.letter, m.degree)
+func (m *Monomial) Divide(others ...*Monomial) *Monomial {
+	// temp := NewMonomialWithVariables(m.coefficient, m.variables...)
+	temp := makeCopy(*m)
 
-// 	for _, other := range others {
-// 		if AreLikeTerms(temp, other) {
-// 			temp.coefficient = temp.coefficient.Divide(other.coefficient)
-// 			temp.degree = temp.degree.Subtract(other.degree)
-// 		} else {
+	for _, other := range others {
+		temp.coefficient = temp.coefficient.Divide(other.coefficient)
+		for i, tempVar := range temp.variables {
+			for _, otherVar := range other.variables {
+				if tempVar.letter == otherVar.letter {
+					temp.variables[i].exponent = tempVar.exponent.Subtract(otherVar.exponent)
+				}
+			}
+		}
+	}
+	temp.degree = calculateDegree(temp)
 
-// 		}
-// 	}
-
-// 	return temp
-// }
+	return temp
+}
 
 // #endregion
 
@@ -215,8 +224,14 @@ func (m *Monomial) Subtract(others ...*Monomial) *Polynomial {
 func (m Monomial) String() string {
 	c := fmt.Sprintf("%v", m.coefficient)
 
+	if len(m.variables) == 0 {
+		return c
+	}
+
 	if m.coefficient.Equals(basicmath.NewInteger(1)) {
 		c = ""
+	} else if m.coefficient.Equals(basicmath.NewInteger(-1)) {
+		c = "-"
 	}
 
 	var sb strings.Builder
@@ -265,9 +280,32 @@ func ParseToVariables(variables string) []*Variable {
 	return vars
 }
 
+func (m *Monomial) StandardForm() *Monomial {
+	// Sort variables alphabetically
+	sort.Slice(m.variables, func(i int, j int) bool {
+		a := m.variables[i]
+		b := m.variables[j]
+		
+		return a.Letter() < b.Letter()
+	})
+
+	return m
+}
+
 // #endregion
 
 // #region Private Methods
+
+func (a *Monomial) multiplyVariable(v *Variable) {
+	for i, variable := range a.variables {
+		if AreLikeVariables(*v, *variable) {
+			a.variables[i].exponent = a.variables[i].exponent.Add(v.exponent)
+			return
+		}
+	}
+	// If no similar variable is found, append it
+	a.variables = append(a.variables, v)
+}
 
 func areLike(a, b *Monomial) bool {
 	if len(a.variables) != len(b.variables) {
@@ -299,6 +337,49 @@ func areLike(a, b *Monomial) bool {
 	return true
 }
 
+func calculateDegree(m *Monomial) *basicmath.Fraction {
+	m.degree = basicmath.NewInteger(0)
+	if len(m.variables) > 0 {
+		if m.variables[0].exponent != nil {
+			m.degree = basicmath.NewFraction(m.variables[0].exponent.Numerator(), m.variables[0].exponent.Denominator())
+			for _, variable := range m.variables[1:] {
+				m.degree = m.degree.Add(variable.exponent)
+			}
+		}
+	}
+	return m.degree
+}
+
+func makeCopy(m Monomial) *Monomial {
+	copy := &Monomial{}
+
+	copy.coefficient = basicmath.NewFraction(m.coefficient.Numerator(), m.coefficient.Denominator())
+
+	var variables []*Variable
+	for _, variable := range m.variables {
+		variables = append(variables, NewVariableWithExponent(variable.Letter(),
+			basicmath.NewFraction(variable.exponent.Numerator(), variable.exponent.Denominator())))
+	}
+
+	copy.variables = variables
+
+	copy.degree = calculateDegree(copy)
+
+	return copy
+}
+
+func multiplyTwoMonomials(a, b Monomial) *Monomial {
+	m := &Monomial{}
+	m.coefficient = a.coefficient.Multiply(b.coefficient)
+	m.variables = a.variables
+
+	for _, other := range b.variables {
+		m.multiplyVariable(other)
+	}
+
+	return m.StandardForm()
+}
+
 func parseToVariable(part string) *Variable {
 	var letter string
 	numerator, denominator := 1, 1
@@ -316,17 +397,6 @@ func parseToVariable(part string) *Variable {
 	}
 
 	return NewVariableWithExponent(letter, basicmath.NewFraction(numerator, denominator))
-}
-
-func sortString(s string) string {
-	// Convert string to a slice of runes to handle Unicode characters
-	runes := []rune(s)
-	// Sort the slice of runes
-	sort.Slice(runes, func(i, j int) bool {
-		return runes[i] < runes[j]
-	})
-	// Convert the sorted slice back to a string
-	return string(runes)
 }
 
 // #endregion
