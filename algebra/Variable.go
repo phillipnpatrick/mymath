@@ -3,6 +3,7 @@ package algebra
 import (
 	"fmt"
 	"mymath/basicmath"
+	"mymath/latex"
 )
 
 type Variable struct {
@@ -57,10 +58,10 @@ func (v Variable) LaTeX() string {
 	}
 
 	if v.exponent.IsInteger() {
-		return fmt.Sprintf("%s^%s", string(v.letter), v.exponent.LaTeX())
+		return fmt.Sprintf("%s^{%s}", string(v.letter), v.exponent.LaTeX())
 	}
 
-	return fmt.Sprintf(`%s^\left(%s\right)`, string(v.letter), v.exponent.LaTeX())
+	return fmt.Sprintf(`%s^{%s}`, string(v.letter), latex.WrapInParentheses(v.exponent.LaTeX()))
 }
 
 // #endregion
@@ -93,6 +94,14 @@ func (v Variable) String() string {
 
 func AreLikeVariables(a, b Variable) bool {
 	return a.letter == b.letter
+}
+
+func (v *Variable) GCF(other *Variable) *Variable {
+	if v.letter != other.letter {
+		return nil
+	}
+	
+	return NewVariableWithExponent(v.Letter(), v.exponent.Min(other.exponent))
 }
 
 func (v Variable) IsLikeTerm(other Variable) bool {

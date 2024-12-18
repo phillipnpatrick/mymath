@@ -601,6 +601,14 @@ func TestMonomial_Divide(t *testing.T) {
 				NewVariableWithExponent("p", basicmath.NewInteger(5)),
 				NewVariableWithExponent("q", basicmath.NewInteger(4))),
 		},
+		{ // ab / abc = 1/c ???
+			name: "Monomial_Divide_Test06",
+			m: NewMonomialWithVariables(basicmath.NewInteger(1), NewVariable("a"), NewVariable("b")),
+			args: args{others: []*Monomial{
+				NewMonomialWithVariables(basicmath.NewInteger(1), NewVariable("a"), NewVariable("b"), NewVariable("c")),
+			}},
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

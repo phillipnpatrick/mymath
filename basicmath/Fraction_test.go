@@ -1,6 +1,7 @@
 package basicmath
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -559,6 +560,76 @@ func TestFraction_String(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.f.String(); got != tt.want {
 				t.Errorf("Fraction.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetFractionGCF(t *testing.T) {
+	type args struct {
+		fractions []*Fraction
+	}
+	tests := []struct {
+		name string
+		args args
+		want *Fraction
+	}{
+		{
+			name: "Fraction_GetFractionGCF_Test01",
+			args: args{fractions: []*Fraction{NewFraction(6, 8), NewFraction(9, 12)}},
+			want: NewFraction(3, 4),
+		},
+		{
+			name: "Fraction_GetFractionGCF_Test02",
+			args: args{fractions: []*Fraction{NewFraction(8, 12), NewFraction(10, 15)}},
+			want: NewFraction(2, 3),
+		},
+		{
+			name: "Fraction_GetFractionGCF_Test03",
+			args: args{fractions: []*Fraction{NewFraction(18, 24), NewFraction(27, 36)}},
+			want: NewFraction(9, 12),
+		},
+		{
+			name: "Fraction_GetFractionGCF_Test04",
+			args: args{fractions: []*Fraction{NewFraction(20, 28), NewFraction(15, 21)}},
+			want: NewFraction(5, 7),
+		},
+		{
+			name: "Fraction_GetFractionGCF_Test05",
+			args: args{fractions: []*Fraction{NewFraction(16, 20), NewFraction(24, 30)}},
+			want: NewFraction(8, 10),
+		},
+		{
+			name: "Fraction_GetFractionGCF_Test06",
+			args: args{fractions: []*Fraction{NewFraction(14, 35), NewFraction(21, 49)}},
+			want: NewFraction(7, 7),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetFractionGCF(tt.args.fractions...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetFractionGCF() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getFractionGCF(t *testing.T) {
+	type args struct {
+		a *Fraction
+		b *Fraction
+	}
+	tests := []struct {
+		name string
+		args args
+		want *Fraction
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getGCFofTwoFractions(tt.args.a, tt.args.b); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getFractionGCF() = %v, want %v", got, tt.want)
 			}
 		})
 	}

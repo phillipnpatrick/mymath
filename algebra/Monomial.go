@@ -3,6 +3,7 @@ package algebra
 import (
 	"fmt"
 	"mymath/basicmath"
+	"mymath/datastructures"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,7 +24,7 @@ func NewMonomial(coefficient *basicmath.Fraction, letter string) *Monomial {
 		variables:   []*Variable{NewVariableWithExponent(letter, basicmath.NewInteger(1))},
 	}
 
-	m.degree = calculateDegree(m)
+	m.degree = m.calculateDegree()
 
 	return m
 }
@@ -33,7 +34,7 @@ func NewMonomialConstant(coefficient *basicmath.Fraction) *Monomial {
 		coefficient: coefficient,
 	}
 
-	m.degree = calculateDegree(m)
+	m.degree = m.calculateDegree()
 
 	return m
 }
@@ -44,7 +45,7 @@ func NewMonomialWithExponent(coefficient *basicmath.Fraction, letter string, exp
 		variables:   []*Variable{NewVariableWithExponent(letter, exponent)},
 	}
 
-	m.degree = calculateDegree(m)
+	m.degree = m.calculateDegree()
 
 	return m
 }
@@ -55,7 +56,7 @@ func NewMonomialWithVariables(coefficient *basicmath.Fraction, variables ...*Var
 		variables:   variables,
 	}
 
-	m.degree = calculateDegree(m)
+	m.degree = m.calculateDegree()
 
 	return m
 }
@@ -66,7 +67,7 @@ func NewMonomialWithVariables(coefficient *basicmath.Fraction, variables ...*Var
 
 // The total degree of the monomial (a sum of the exponents)
 func (m *Monomial) Degree() *basicmath.Fraction {
-	m.degree = calculateDegree(m)
+	m.degree = m.calculateDegree()
 	return m.degree
 }
 
@@ -85,14 +86,6 @@ func (m *Monomial) Variables() string {
 // #region Comparable
 
 func (m *Monomial) Equals(other *Monomial) bool { // Check if the number of monomials is the same
-	if len(m.variables) != len(other.variables) {
-		return false
-	}
-
-	if !m.coefficient.Equals(other.coefficient) {
-		return false
-	}
-
 	// Create maps to track variables by their variable and degree
 	v1 := make(map[string]*Variable)
 	v2 := make(map[string]*Variable)
@@ -102,9 +95,17 @@ func (m *Monomial) Equals(other *Monomial) bool { // Check if the number of mono
 		v1[key] = variable
 	}
 
+	if len(m.variables) == 0 {
+		m.variables = nil
+	}
+
 	for _, variable := range other.variables {
 		key := fmt.Sprintf("%s^%s", string(variable.letter), variable.exponent.String())
 		v2[key] = variable
+	}
+
+	if len(other.variables) == 0 {
+		other.variables = nil
 	}
 
 	// Compare both maps
@@ -175,32 +176,18 @@ func (m *Monomial) Subtract(others ...*Monomial) *Polynomial {
 }
 
 func (m *Monomial) Multiply(others ...*Monomial) *Monomial {
-	// temp := NewMonomialWithVariables(m.coefficient, m.variables...)
-	temp := makeCopy(*m)
+	temp := makeCopyOfMonomial(*m)
 
 	for _, other := range others {
-		temp = multiplyTwoMonomials(*temp, *other)
-		// temp.coefficient = temp.coefficient.Multiply(other.coefficient)
-		// if len(temp.variables) == 0 {
-		// 	temp.variables = other.variables
-		// } else {
-		// 	for i, tempVar := range temp.variables {
-		// 		for _, otherVar := range other.variables {
-		// 			if tempVar.letter == otherVar.letter {
-		// 				temp.variables[i].exponent = tempVar.exponent.Add(otherVar.exponent)
-		// 			}
-		// 		}
-		// 	}
-		// }
+		temp = temp.multiplyBy(other)
 	}
-	temp.degree = calculateDegree(temp)
+	temp.degree = temp.calculateDegree()
 
 	return temp
 }
 
 func (m *Monomial) Divide(others ...*Monomial) *Monomial {
-	// temp := NewMonomialWithVariables(m.coefficient, m.variables...)
-	temp := makeCopy(*m)
+	temp := makeCopyOfMonomial(*m)
 
 	for _, other := range others {
 		temp.coefficient = temp.coefficient.Divide(other.coefficient)
@@ -208,11 +195,14 @@ func (m *Monomial) Divide(others ...*Monomial) *Monomial {
 			for _, otherVar := range other.variables {
 				if tempVar.letter == otherVar.letter {
 					temp.variables[i].exponent = tempVar.exponent.Subtract(otherVar.exponent)
+					if temp.variables[i].exponent.Equals(basicmath.NewInteger(0)) {
+						temp.variables, _ = datastructures.SliceRemoveAtIndex(temp.variables, i)
+					}
 				}
 			}
 		}
 	}
-	temp.degree = calculateDegree(temp)
+	temp.degree = temp.calculateDegree()
 
 	return temp
 }
@@ -251,10 +241,46 @@ func AreLikeTerms(monomials ...*Monomial) bool {
 	like := true
 
 	for i := 1; i < len(monomials); i++ {
-		like = like && areLike(monomials[i-1], monomials[i])
+		like = like && monomials[i-1].isLike(monomials[i])
 	}
 
 	return like
+}
+
+func ContainsMonomial(monomials []*Monomial, monomial *Monomial) bool {
+	for _, m := range monomials {
+		if m.Equals(monomial) {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *Monomial) GCF(monomials ...*Monomial) *Monomial {
+	if len(monomials) == 0 {
+		return makeCopyOfMonomial(*m)
+	}
+	gcf := makeCopyOfMonomial(*m)
+	for _, monomial := range monomials {
+		gcf = gcf.gcd(monomial)
+	}
+	return gcf
+}
+
+func GetMonomialByDegree(degree *basicmath.Fraction, monomials ...*Monomial) *Monomial {
+	for _, mono := range monomials {
+		if mono.degree.Equals(degree) {
+			return mono
+		}
+	}
+	return nil
+}
+
+func GetMonomialGCF(monomials ...*Monomial) *Monomial {
+	if len(monomials) == 0 {
+		return NewMonomialConstant(basicmath.NewInteger(0))
+	}
+	return monomials[0].GCF(monomials[1:]...)
 }
 
 func ParseToVariables(variables string) []*Variable {
@@ -285,7 +311,7 @@ func (m *Monomial) StandardForm() *Monomial {
 	sort.Slice(m.variables, func(i int, j int) bool {
 		a := m.variables[i]
 		b := m.variables[j]
-		
+
 		return a.Letter() < b.Letter()
 	})
 
@@ -307,7 +333,8 @@ func (a *Monomial) multiplyVariable(v *Variable) {
 	a.variables = append(a.variables, v)
 }
 
-func areLike(a, b *Monomial) bool {
+// determines if two monomials have the same variables with the same exponents
+func (a *Monomial) isLike(b *Monomial) bool {
 	if len(a.variables) != len(b.variables) {
 		return false
 	}
@@ -337,7 +364,7 @@ func areLike(a, b *Monomial) bool {
 	return true
 }
 
-func calculateDegree(m *Monomial) *basicmath.Fraction {
+func (m *Monomial) calculateDegree() *basicmath.Fraction {
 	m.degree = basicmath.NewInteger(0)
 	if len(m.variables) > 0 {
 		if m.variables[0].exponent != nil {
@@ -350,7 +377,42 @@ func calculateDegree(m *Monomial) *basicmath.Fraction {
 	return m.degree
 }
 
-func makeCopy(m Monomial) *Monomial {
+func (a *Monomial) gcd(b *Monomial) *Monomial {
+	gcf := basicmath.GetFractionGCF(a.coefficient, b.coefficient)
+
+	// Create maps to track variables by their variable and exponent
+	v1 := make(map[string]*basicmath.Fraction)
+	v2 := make(map[string]*basicmath.Fraction)
+
+	for _, variable := range a.variables {
+		v1[variable.Letter()] = variable.exponent
+	}
+
+	for _, variable := range b.variables {
+		v2[variable.Letter()] = variable.exponent
+	}
+
+	// Compare both maps to find common factor
+	var factors []*Variable
+	for key, exp1 := range v1 {
+		if exp2, exists := v2[key]; exists {
+			minPower := exp1.Min(exp2)
+			factors = append(factors, NewVariableWithExponent(key, minPower))
+		}
+	}
+
+	return NewMonomialWithVariables(gcf, factors...)
+}
+
+func (m *Monomial) getVariableLetter() string {
+	if len(m.variables) == 0 || len(m.variables) > 1 {
+		return ""
+	}
+
+	return m.variables[0].Letter()
+}
+
+func makeCopyOfMonomial(m Monomial) *Monomial {
 	copy := &Monomial{}
 
 	copy.coefficient = basicmath.NewFraction(m.coefficient.Numerator(), m.coefficient.Denominator())
@@ -363,12 +425,12 @@ func makeCopy(m Monomial) *Monomial {
 
 	copy.variables = variables
 
-	copy.degree = calculateDegree(copy)
+	copy.degree = copy.calculateDegree()
 
 	return copy
 }
 
-func multiplyTwoMonomials(a, b Monomial) *Monomial {
+func (a *Monomial) multiplyBy(b *Monomial) *Monomial {
 	m := &Monomial{}
 	m.coefficient = a.coefficient.Multiply(b.coefficient)
 	m.variables = a.variables

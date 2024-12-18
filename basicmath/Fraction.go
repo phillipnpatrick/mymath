@@ -219,12 +219,79 @@ func (f *Fraction) String() string {
 
 // #region Public Methods
 
+func (f *Fraction) Abs() *Fraction {
+	if f.LessThan(NewInteger(0)) {
+		return NewFraction(-f.n, f.d) 
+	}
+	return NewFraction(f.n, f.d)
+}
+
+func FactorsOf(fraction *Fraction) map[*Fraction]*Fraction {
+	var factors map[*Fraction]*Fraction
+
+	if fraction.IsInteger() {
+		factors = getFactorsOf(fraction.n)
+	} else {
+		// TODO: ????
+	}
+
+	return factors
+}
+
+func GetFractionGCF(fractions ...*Fraction) *Fraction {
+	if len(fractions) == 0 {
+		return NewInteger(0)
+	}
+	gcf := fractions[0]
+	for _, number := range fractions[1:] {
+		gcf = getGCFofTwoFractions(gcf, number)
+	}
+	return gcf
+}
+
+func GetMaxFraction(fractions ...*Fraction) *Fraction {
+	max := NewFraction(fractions[0].n, fractions[0].d)
+
+	return max.Max(fractions[1:]...)
+}
+
 func (f *Fraction) IsInteger() bool {
 	return f.d == 1
+}
+
+func (f *Fraction) Max(fractions ...*Fraction) *Fraction {
+	max := NewFraction(f.n, f.d)
+
+	for _, f := range fractions {
+		if f.GreaterThan(max) {
+			max = NewFraction(f.n, f.d)
+		}
+	}
+
+	return max
+}
+
+func (f *Fraction) Min(fractions ...*Fraction) *Fraction {
+	min := NewFraction(f.n, f.d)
+
+	for _, f := range fractions {
+		if f.LessThan(min) {
+			min = NewFraction(f.n, f.d)
+		}
+	}
+
+	return min
 }
 
 // #endregion
 
 // #region Private Methods
+
+func getGCFofTwoFractions(a, b *Fraction) *Fraction {
+	numerator := GCF(a.n, b.n)
+	denominator := GCF(a.d, b.d)
+
+	return NewFraction(numerator, denominator)
+}
 
 // #endregion

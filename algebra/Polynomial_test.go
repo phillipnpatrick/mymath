@@ -7,6 +7,12 @@ import (
 	"testing"
 )
 
+func compareValues(name string, v1, v2 interface{}) {
+	if !reflect.DeepEqual(v1, v2) {
+		fmt.Printf("Mismatch in %s: %v != %v\n", name, v1, v2)
+	}
+}
+
 func TestPolynomial_Equals(t *testing.T) {
 	type args struct {
 		other *Polynomial
@@ -416,12 +422,6 @@ func TestPolynomial_StandardForm(t *testing.T) {
 	}
 }
 
-func compareValues(name string, v1, v2 interface{}) {
-	if !reflect.DeepEqual(v1, v2) {
-		fmt.Printf("Mismatch in %s: %v != %v\n", name, v1, v2)
-	}
-}
-
 func TestPolynomial_Add(t *testing.T) {
 	type args struct {
 		others []*Polynomial
@@ -684,6 +684,225 @@ func TestPolynomial_Multiply(t *testing.T) {
 			if got := tt.p.Multiply(tt.args.others...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Polynomial.Multiply() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestPolynomial_Factor(t *testing.T) {
+	tests := []struct {
+		name string
+		p    *Polynomial
+		want []*Polynomial
+	}{
+		{ // x^2 - 9x + 14 = (x - 7)(x - 2)
+			name: "Polynomial_Factor_Test01",
+			p: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewInteger(1), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewInteger(-9), "x"),
+				NewMonomialConstant(basicmath.NewInteger(14))),
+			want: []*Polynomial{
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(-7))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(-2))),
+			},
+		},
+		{ // x^2 + 5x + 6 = (x + 2)(x + 3)
+			name: "Polynomial_Factor_Test02",
+			p: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewInteger(1), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewInteger(5), "x"),
+				NewMonomialConstant(basicmath.NewInteger(6))),
+			want: []*Polynomial{
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(2))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(3))),
+			},
+		},
+		{ // x^2 - x - 12 = (x + 3)(x - 4)
+			name: "Polynomial_Factor_Test03",
+			p: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewInteger(1), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewInteger(-1), "x"),
+				NewMonomialConstant(basicmath.NewInteger(-12))),
+			want: []*Polynomial{
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(3))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(-4))),
+			},
+		},
+		{ // 2x^2 + 7x + 3 = (2x + 1)(x + 3)
+			name: "Polynomial_Factor_Test04",
+			p: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewInteger(2), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewInteger(7), "x"),
+				NewMonomialConstant(basicmath.NewInteger(3))),
+			want: []*Polynomial{
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(2), "x"),
+					NewMonomialConstant(basicmath.NewInteger(1))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(3))),
+			},
+		},
+		{ // (3/4)x^2 - (5/4)x - 2 = 1/4(x + 1)(3x - 8)
+			name: "Polynomial_Factor_Test05",
+			p: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewFraction(3, 4), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewFraction(-5, 4), "x"),
+				NewMonomialConstant(basicmath.NewFraction(-2, 1))),
+			want: []*Polynomial{
+				NewPolynomial(
+					NewMonomialConstant(basicmath.NewFraction(1, 4))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(1))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(3), "x"),
+					NewMonomialConstant(basicmath.NewInteger(-8))),
+			},
+		},
+		{ // (5/6)x^2 + (4/3)x - (2/3) = 1/6(5x - 2)(x + 2)
+			name: "Polynomial_Factor_Test06",
+			p: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewFraction(5, 6), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewFraction(4, 3), "x"),
+				NewMonomialConstant(basicmath.NewFraction(-2, 3))),
+			want: []*Polynomial{
+				NewPolynomial(
+					NewMonomialConstant(basicmath.NewFraction(1, 6))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(5), "x"),
+					NewMonomialConstant(basicmath.NewInteger(-2))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(2))),
+			},
+		},
+		{ // 6x^2 + 15x + 9 = 3(2x + 3)(x + 1)
+			name: "Polynomial_Factor_Test07",
+			p: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewInteger(6), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewInteger(15), "x"),
+				NewMonomialConstant(basicmath.NewInteger(9))),
+			want: []*Polynomial{
+				NewPolynomial(
+					NewMonomialConstant(basicmath.NewInteger(3))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(2), "x"),
+					NewMonomialConstant(basicmath.NewInteger(3))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(1))),
+			},
+		},
+		{ // 8x^2 + 20x + 12 = 4(2x + 3)(x + 1)
+			name: "Polynomial_Factor_Test08",
+			p: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewInteger(8), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewInteger(20), "x"),
+				NewMonomialConstant(basicmath.NewInteger(12))),
+			want: []*Polynomial{
+				NewPolynomial(
+					NewMonomialConstant(basicmath.NewInteger(4))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(2), "x"),
+					NewMonomialConstant(basicmath.NewInteger(3))),
+				NewPolynomial(
+					NewMonomial(basicmath.NewInteger(1), "x"),
+					NewMonomialConstant(basicmath.NewInteger(1))),
+			},
+		},
+		{ // 4x^2 + 8x + 12 = 4(x^2 + 2x + 3)
+			name: "Polynomial_Factor_Test09",
+			p: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewInteger(4), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewInteger(8), "x"),
+				NewMonomialConstant(basicmath.NewInteger(12))),
+			want: []*Polynomial{
+				NewPolynomial(
+					NewMonomialConstant(basicmath.NewInteger(4))),
+				NewPolynomial(
+					NewMonomialWithExponent(basicmath.NewInteger(1), "x", basicmath.NewInteger(2)),
+					NewMonomial(basicmath.NewInteger(2), "x"),
+					NewMonomialConstant(basicmath.NewInteger(3))),
+			},
+		},
+		{ // (5/6)x^2 - (4/3)x + (2/3) = 1/6(5x^2 - 8x + 4)
+			name: "Polynomial_Factor_Test10",
+			p: NewPolynomial(
+				NewMonomialWithExponent(basicmath.NewFraction(5, 6), "x", basicmath.NewInteger(2)),
+				NewMonomial(basicmath.NewFraction(-4, 3), "x"),
+				NewMonomialConstant(basicmath.NewFraction(2, 3))),
+			want: []*Polynomial{
+				NewPolynomial(
+					NewMonomialConstant(basicmath.NewFraction(1, 6))),
+				NewPolynomial(
+					NewMonomialWithExponent(basicmath.NewInteger(5), "x", basicmath.NewInteger(2)),
+					NewMonomial(basicmath.NewInteger(-8), "x"),
+					NewMonomialConstant(basicmath.NewInteger(4))),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.p.Factor()
+
+			if len(got) != len(tt.want) {
+				// len([]*Polynomial) unequal
+				t.Errorf("Polynomial.Factor() = len(%v) = %d, want len(%v) = %d", got, len(got), tt.want, len(tt.want))
+			} else {
+				for i := 0; i < len(got); i++ {
+					if len(got[i].monomials) != len(tt.want[i].monomials) {
+						// len([]*Monomial) unequal
+						t.Errorf("Polynomial.Factor() i=%d len(%v) = %d, want len(%v) = %d", i,
+							got[i].monomials, len(got[i].monomials),
+							tt.want[i].monomials, len(tt.want[i].monomials))
+					} else {
+						for j := 0; j < len(got[i].monomials); j++ {
+							if !ContainsMonomial(tt.want[i].monomials, got[i].monomials[j]) {
+								t.Errorf("Polynomial.Factor() result does not contain %v", got[i].monomials[j])
+							}
+
+							if len(got[i].monomials[j].variables) != len(tt.want[i].monomials[j].variables) {
+								// len([]*Variable) unequal
+								t.Errorf("Polynomial.Factor() j=%d len(%v) = %d, want len(%v) = %d", j,
+									got[i].monomials[j].variables, len(got[i].monomials[j].variables),
+									tt.want[i].monomials[j].variables, len(tt.want[i].monomials[j].variables))
+							}
+						}
+					}
+				}
+			}
+
+			// if !reflect.DeepEqual(got, tt.want) {
+			// 	if len(got) == len(tt.want) {
+			// 		compareValues("polynomials", got, tt.want)
+			// 		for i, poly := range got {
+			// 			for j, mono := range poly.monomials {
+			// 				compareValues("monomials", poly.monomials[j], tt.want[i].monomials[j])
+			// 				fmt.Printf("%v\n", mono)
+			// 				for k, variable := range mono.variables {
+			// 					compareValues("variables", poly.monomials[j].variables[k], tt.want[i].monomials[j].variables[k])
+			// 					fmt.Printf("%v\n", variable)
+			// 				}
+			// 			}
+			// 		}
+			// 	} else {
+			// 		fmt.Printf("len(got) != len(tt.want) [%d != %d]\n", len(got), len(tt.want))
+			// 	}
+
+			// 	t.Errorf("Polynomial.Factor() = %v, want %v", got, tt.want)
+			// }
 		})
 	}
 }
