@@ -171,6 +171,12 @@ func (f *Fraction) Divide(others ...*Fraction) *Fraction {
 	return temp
 }
 
+func (f Fraction) DividedByFloat(others ...float64) *Fraction {
+	floats := floatsToFraction(others...)
+
+	return f.Divide(floats...)
+}
+
 func (f Fraction) DividedBy(others ...*Fraction) *Fraction {
 	return f.Divide(others...)
 }

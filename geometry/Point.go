@@ -49,41 +49,45 @@ func (p Point) Dot(other Point) float64 {
 	return x.Plus(y).ToFloat64()
 }
 
-// // Magnitude returns the length of the vector.
-// func (p Point) Magnitude() float64 {
-// 	return math.Sqrt(p.X*p.X + p.Y*p.Y)
-// }
+// Magnitude returns the length of the vector.
+func (p Point) Magnitude() float64 {
+	x := p.X.Times(&p.X)
+	y := p.Y.Times(&p.Y)
 
-// // Normalize returns a unit vector in the same direction.
-// func (p Point) Normalize() Point {
-// 	mag := p.Magnitude()
-// 	if mag == 0 {
-// 		return Point{0, 0}
-// 	}
-// 	return Point{p.X / mag, p.Y / mag}
-// }
+	return math.Sqrt(x.Plus(y).ToFloat64())
+}
 
-// // AngleTo returns the angle in radians between this vector and another.
-// func (p Point) AngleTo(other Point) float64 {
-// 	dot := p.Dot(other)
-// 	magProduct := p.Magnitude() * other.Magnitude()
-// 	if magProduct == 0 {
-// 		return 0
-// 	}
-// 	return math.Acos(dot / magProduct)
-// }
+// Normalize returns a unit vector in the same direction.
+func (p Point) Normalize() Point {
+	mag := p.Magnitude()
+	if mag == 0 {
+		return Point{X: *basicmath.NewInteger(0), Y: *basicmath.NewInteger(0)}
+	}
+	// return Point{p.X / mag, p.Y / mag}
+	return Point{*p.X.DividedByFloat(mag), *p.Y.DividedByFloat(mag)}
+}
 
-// // AngleDegTo returns the angle in degrees between this vector and another.
-// func (p Point) AngleDegTo(other Point) float64 {
-// 	return p.AngleTo(other) * 180 / math.Pi
-// }
+// AngleTo returns the angle in radians between this vector and another.
+func (p Point) AngleTo(other Point) float64 {
+	dot := p.Dot(other)
+	magProduct := p.Magnitude() * other.Magnitude()
+	if magProduct == 0 {
+		return 0
+	}
+	return math.Acos(dot / magProduct)
+}
 
-// // ToPolar converts the point to polar coordinates (r, θ in radians).
-// func (p Point) ToPolar() (r float64, theta float64) {
-// 	r = p.Magnitude()
-// 	theta = math.Atan2(p.Y, p.X)
-// 	return
-// }
+// AngleDegTo returns the angle in degrees between this vector and another.
+func (p Point) AngleDegTo(other Point) float64 {
+	return p.AngleTo(other) * 180 / math.Pi
+}
+
+// ToPolar converts the point to polar coordinates (r, θ in radians).
+func (p Point) ToPolar() (r float64, theta float64) {
+	r = p.Magnitude()
+	theta = math.Atan2(p.Y.ToFloat64(), p.X.ToFloat64())
+	return
+}
 
 // // FromPolar creates a Point from polar coordinates (r, θ in radians).
 // func FromPolar(r, theta float64) Point {
