@@ -237,7 +237,7 @@ func TestMonomial_LaTeX(t *testing.T) {
 		{
 			name: "Monomial_LaTeX_Test01",
 			m:    *NewMonomialWithExponent(basicmath.NewInteger(9), "x", basicmath.NewInteger(2)),
-			want: "9x^2",
+			want: "9x^{2}",
 		},
 		{
 			name: "Monomial_LaTeX_Test02",
@@ -245,7 +245,7 @@ func TestMonomial_LaTeX(t *testing.T) {
 				NewVariableWithExponent("a", basicmath.NewInteger(2)),
 				NewVariableWithExponent("b", basicmath.NewInteger(3)),
 				NewVariableWithExponent("c", basicmath.NewInteger(4))),
-			want: "9a^2b^3c^4",
+			want: "9a^{2}b^{3}c^{4}",
 		},
 		{
 			name: "Monomial_LaTeX_Test03",
@@ -265,12 +265,12 @@ func TestMonomial_LaTeX(t *testing.T) {
 		{
 			name: "Monomial_LaTeX_Test06",
 			m: *NewMonomialWithExponent(basicmath.NewInteger(-1), "m", basicmath.NewInteger(2)),
-			want: "-m^2",
+			want: "-m^{2}",
 		},
 		{
 			name: "Monomial_LaTeX_Test07",
 			m: *NewMonomialWithExponent(basicmath.NewInteger(1), "m", basicmath.NewInteger(2)),
-			want: "m^2",
+			want: "m^{2}",
 		},
 	}
 	for _, tt := range tests {

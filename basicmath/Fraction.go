@@ -2,7 +2,9 @@ package basicmath
 
 import (
 	"fmt"
+	"math"
 	"strings"
+	"strconv"
 )
 
 // #region Constructor
@@ -158,16 +160,23 @@ func (f *Fraction) Add(others ...*Fraction) *Fraction {
 	return temp
 }
 
-func (f *Fraction) Subtract(others ...*Fraction) *Fraction {
+func (f *Fraction) Divide(others ...*Fraction) *Fraction {
 	temp := NewFraction(f.n, f.d)
 
 	for _, other := range others {
-		f1 := other.Multiply(NewInteger(-1))
-
-		temp = temp.Add(f1)
+		f1 := NewFraction(other.d, other.n)
+		temp = temp.Multiply(f1)
 	}
 
 	return temp
+}
+
+func (f Fraction) DividedBy(others ...*Fraction) *Fraction {
+	return f.Divide(others...)
+}
+
+func (f Fraction) Minus(others ...*Fraction) *Fraction {
+	return f.Subtract(others...)
 }
 
 func (f *Fraction) Multiply(others ...*Fraction) *Fraction {
@@ -182,15 +191,36 @@ func (f *Fraction) Multiply(others ...*Fraction) *Fraction {
 	return temp
 }
 
-func (f *Fraction) Divide(others ...*Fraction) *Fraction {
+func (f Fraction) MultiplyByFactor(others ...float64) *Fraction {
+	floats := floatsToFraction(others...)
+
+	return f.Multiply(floats...)
+}
+
+func (f Fraction) Plus(others ...*Fraction) *Fraction {
+	return f.Add(others...)
+}
+
+func (f *Fraction) PlusFloat(others ...float64) *Fraction {
+	floats := floatsToFraction(others...)
+
+	return f.Add(floats...)
+}
+
+func (f *Fraction) Subtract(others ...*Fraction) *Fraction {
 	temp := NewFraction(f.n, f.d)
 
 	for _, other := range others {
-		f1 := NewFraction(other.d, other.n)
-		temp = temp.Multiply(f1)
+		f1 := other.Multiply(NewInteger(-1))
+
+		temp = temp.Add(f1)
 	}
 
 	return temp
+}
+
+func (f Fraction) Times(others ...*Fraction) *Fraction {
+	return f.Multiply(others...)
 }
 
 // #endregion
@@ -221,9 +251,13 @@ func (f *Fraction) String() string {
 
 func (f *Fraction) Abs() *Fraction {
 	if f.LessThan(NewInteger(0)) {
-		return NewFraction(-f.n, f.d) 
+		return NewFraction(-f.n, f.d)
 	}
 	return NewFraction(f.n, f.d)
+}
+
+func (f Fraction) ToFloat64() float64 {
+	return float64(f.n) / float64(f.d)
 }
 
 func FactorsOf(fraction *Fraction) map[*Fraction]*Fraction {
@@ -286,6 +320,37 @@ func (f *Fraction) Min(fractions ...*Fraction) *Fraction {
 // #endregion
 
 // #region Private Methods
+
+func floatsToFraction(others ...float64) []*Fraction {
+	floats := []*Fraction{}
+
+	for _, other := range others {
+		floats = append(floats, floatToFraction(other))
+	}
+
+	return floats
+}
+
+func floatToFraction(value float64) *Fraction {
+	s := strconv.FormatFloat(value, 'f', -1, 64)
+	parts := strings.Split(s, ".")
+
+	if len(parts) > 0 && len(parts) <= 2{
+		nTemp, _ := strconv.Atoi(parts[0])
+
+		if len(parts) == 2 {
+			dTemp, _ := strconv.Atoi(parts[1])
+			d := int(math.Pow10(len(parts[1])))
+			n := (nTemp * d) + dTemp
+
+			return NewFraction(n, d)
+		} else {
+			return NewFraction(nTemp, 1)
+		}
+	}
+
+	return nil
+}
 
 func getGCFofTwoFractions(a, b *Fraction) *Fraction {
 	numerator := GCF(a.n, b.n)
