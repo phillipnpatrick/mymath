@@ -1,5 +1,7 @@
 package geometry
 
+import "math"
+
 // --- Helper functions ---
 
 func distance(p1, p2 Point) float64 {

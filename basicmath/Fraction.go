@@ -278,6 +278,10 @@ func FactorsOf(fraction *Fraction) map[*Fraction]*Fraction {
 	return factors
 }
 
+func FromFloatToFraction(value float64) *Fraction {
+	return floatToFraction(value)
+}
+
 func GetFractionGCF(fractions ...*Fraction) *Fraction {
 	if len(fractions) == 0 {
 		return NewInteger(0)

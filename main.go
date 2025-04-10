@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"mymath/geometry"
 	"math"
 	"strconv"
 	"strings"
@@ -12,9 +13,13 @@ func main() {
 	fmt.Println("Hello, World!")	
 	fmt.Println()
 
-	floatToFraction(2383158)
+	line := geometry.NewLine(geometry.Point{X: 2, Y: 1}, geometry.Point{X: 8, Y: 6})
 
-	floatToFraction(123.456789)
+	fmt.Printf("%s\n", line.LaTeX())
+
+	// floatToFraction(2383158)
+
+	// floatToFraction(123.456789)
 
 	// a := geometry.Point{X: 3, Y: 4}
 	// b := geometry.Point{X: 1, Y: 2}

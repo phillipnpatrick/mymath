@@ -3,11 +3,12 @@ package geometry
 import (
 	"fmt"
 	"mymath/basicmath"
+	"strings"
 )
 
 type Line struct {
-	Slope      basicmath.Fraction
-	YIntercept float64
+	Slope      	basicmath.Fraction
+	YIntercept 	basicmath.Fraction
 }
 
 func NewLine(a Point, b Point) Line {
@@ -19,11 +20,13 @@ func NewLine(a Point, b Point) Line {
 
 // #region LaTeXer
 
-func (l *Line) LaTeX() string {
-	if l.YIntercept < 0 {
-		return fmt.Sprintf(`y = %vx - %v`, l.Slope, l.YIntercept)
+func (l Line) LaTeX() string {
+	if l.YIntercept.LessThan(basicmath.NewInteger(0)) {
+		b := strings.ReplaceAll(l.YIntercept.LaTeX(), `-\dfrac`, `- \dfrac`)
+		return fmt.Sprintf(`y = %sx %s`, l.Slope.LaTeX(), b)
 	}
-	return fmt.Sprintf(`y = %vx + %v`, l.Slope, l.YIntercept)
+
+	return fmt.Sprintf(`y = %sx + %s`, l.Slope.LaTeX(), l.YIntercept.LaTeX())
 }
 
 // #endregion
@@ -33,13 +36,14 @@ func getSlope(a Point, b Point) basicmath.Fraction {
 	dy := int(a.Y - b.Y)
 	dx := int(a.X - b.X)
 
-	return *basicmath.NewFraction(dx, dy)
+	return *basicmath.NewFraction(dy, dx)
 }
 
-func getYIntercept(a Point, b Point) float64 {
+func getYIntercept(a Point, b Point) basicmath.Fraction {
 	m := getSlope(a, b)
 
-	temp := m.MultiplyByFactor(a.X)
+	mx1 := m.MultiplyByFactor(-a.X)
+	y1 := mx1.PlusFloat(a.Y)
 
-	return temp.PlusFloat(a.Y).ToFloat64()
+	return *y1
 }
